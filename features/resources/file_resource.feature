@@ -1,0 +1,1 @@
+# Feature: File resource for accessing file contents

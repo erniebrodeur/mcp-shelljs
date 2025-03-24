@@ -1,0 +1,1 @@
+// Parameter schema for mkdir command

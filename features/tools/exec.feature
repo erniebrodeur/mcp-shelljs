@@ -1,0 +1,1 @@
+# Feature: exec command for executing shell commands (requires special permission)

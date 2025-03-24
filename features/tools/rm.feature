@@ -1,0 +1,1 @@
+# Feature: rm command for removing files and directories

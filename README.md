@@ -8,10 +8,11 @@ MCP-ShellJS bridges the Model Context Protocol (MCP) with ShellJS, enabling AI s
 
 ## Features
 
-- **Multi-layered security**:
-  - Directory restrictions (WHERE commands can run)
-  - Command restrictions (WHAT commands can run)
-  - Operation restrictions (read-only vs read-write)
+- **Simplified security**:
+  - Read-only mode by default
+  - Optional read-write mode via command line flag
+  - Optional exec permission via command line flag
+- Schema-based validation with Zod
 - Full ShellJS functionality (`ls`, `grep`, `sed`, `find`, etc.)
 - TypeScript implementation with strong typing
 - Simple API for LLM integration
@@ -32,31 +33,45 @@ npm run build
 
 ## Usage
 
+### Command Line
+```bash
+# Default mode (read-only)
+node dist/index.js
+
+# Enable read-write operations
+node dist/index.js --enable-rw
+
+# Enable exec command (careful!)
+node dist/index.js --enable-exec
+
+# Enable both
+node dist/index.js --enable-rw --enable-exec
+```
+
+### TypeScript Integration
 ```typescript
 // Import and initialize the MCP server
 import { startMCPServer } from 'mcp-shelljs';
 
-// Start the server with default configuration
+// Start the server with default configuration (read-only)
 startMCPServer();
 
 // Or with custom security configuration
 startMCPServer({
-  allowedDirectories: ['/safe/path', './project/dir'],
-  allowExec: false,  // Prevent arbitrary command execution
-  readOnlyCommands: ['ls', 'cat', 'grep', 'find'],
-  readWriteCommands: ['mkdir', 'touch', 'cp'] // Restrict or disable entirely
+  enableRw: true,   // Enable read-write operations
+  enableExec: false // Keep exec disabled
 });
 ```
 
 ## Security Design
 
-MCP-ShellJS implements defense-in-depth with three security layers:
+MCP-ShellJS implements a simple security model:
 
-1. **Directory Restrictions**: Commands only execute in allowlisted directories
-2. **Command Filtering**: Explicitly control which ShellJS commands are available
-3. **Operation Mode**: Separate read-only from read-write operations with different permission levels
+1. **Read-Only Mode** (Default): Only commands that don't modify the filesystem are available
+2. **Read-Write Mode** (`--enable-rw`): Enables commands that can create, modify, or delete files
+3. **Exec Mode** (`--enable-exec`): Enables the potentially dangerous `exec` command for executing arbitrary shell commands
 
-Recommended practice: Start with read-only access to non-sensitive directories and gradually expand permissions as needed.
+The server runs with stdio transport only, making it suitable for integration with desktop LLM applications.
 
 ## Why Use MCP-ShellJS?
 
