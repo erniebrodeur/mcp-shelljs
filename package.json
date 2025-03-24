@@ -1,0 +1,47 @@
+{
+  "name": "mcp-shelljs",
+  "version": "1.0.0",
+  "description": "A utility for working with Model Context Protocol using ShellJS",
+  "main": "dist/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "lint": "eslint . --ext .ts",
+    "clean": "rimraf dist",
+    "prebuild": "npm run clean"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "shelljs",
+    "automation"
+  ],
+  "author": "Ernie Brodeur <ebrodeur@ujami.net> (https://github.com/erniebrodeur)",
+  "license": "GPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/erniebrodeur/mcp-shelljs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/erniebrodeur/mcp-shelljs/issues"
+  },
+  "homepage": "https://github.com/erniebrodeur/mcp-shelljs#readme",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.11",
+    "@types/shelljs": "^0.8.15",
+    "eslint": "^8.53.0",
+    "rimraf": "^5.0.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.7.0",
+    "shelljs": "^0.9.2"
+  }
+}
