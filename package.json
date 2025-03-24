@@ -37,6 +37,7 @@
     "@cucumber/cucumber": "^9.5.1",
     "@types/cucumber": "^7.0.0",
     "@types/node": "^22.13.11",
+    "expect": "^29.7.0",
     "@types/shelljs": "^0.8.15",
     "eslint": "^8.53.0",
     "rimraf": "^5.0.5",
