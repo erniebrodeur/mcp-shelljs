@@ -6,6 +6,7 @@
   "type": "commonjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "test:bdd": "cucumber-js",
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
@@ -33,6 +34,8 @@
     "node": ">=16.0.0"
   },
   "devDependencies": {
+    "@cucumber/cucumber": "^9.5.1",
+    "@types/cucumber": "^7.0.0",
     "@types/node": "^22.13.11",
     "@types/shelljs": "^0.8.15",
     "eslint": "^8.53.0",
