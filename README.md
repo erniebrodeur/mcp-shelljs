@@ -1,18 +1,20 @@
 # MCP-ShellJS
 
-A Master Control Program (MCP) server that enables Claude Desktop to safely interact with the host environment through ShellJS.
+An MCP server that provides safe, controlled ShellJS access for LLMs like Claude.
 
 ## Overview
 
-MCP-ShellJS provides a controlled interface for AI systems like Claude to execute shell commands on the host system. It acts as a bridge between the AI and the operating system, offering a secure way to perform file operations, run commands, and interact with the local environment.
+MCP-ShellJS bridges the Model Context Protocol (MCP) with ShellJS, enabling AI systems to execute shell commands within a secure sandbox. It provides controlled filesystem access with multiple security layers.
 
 ## Features
 
-- Controlled shell access for AI assistants
-- TypeScript implementation for type safety
-- Configurable permissions and restrictions
-- API for common file system operations
-- Secure command execution
+- **Multi-layered security**:
+  - Directory restrictions (WHERE commands can run)
+  - Command restrictions (WHAT commands can run)
+  - Operation restrictions (read-only vs read-write)
+- Full ShellJS functionality (`ls`, `grep`, `sed`, `find`, etc.)
+- TypeScript implementation with strong typing
+- Simple API for LLM integration
 
 ## Installation
 
@@ -37,44 +39,113 @@ import { startMCPServer } from 'mcp-shelljs';
 // Start the server with default configuration
 startMCPServer();
 
-// Or with custom configuration
+// Or with custom security configuration
 startMCPServer({
-  port: 3000,
-  allowedCommands: ['ls', 'cat', 'echo'],
-  workingDirectory: '/safe/directory/path'
+  allowedDirectories: ['/safe/path', './project/dir'],
+  allowExec: false,  // Prevent arbitrary command execution
+  readOnlyCommands: ['ls', 'cat', 'grep', 'find'],
+  readWriteCommands: ['mkdir', 'touch', 'cp'] // Restrict or disable entirely
 });
 ```
 
-## Security Considerations
+## Security Design
 
-This tool grants AI systems access to execute commands on your host system. Please use with caution:
+MCP-ShellJS implements defense-in-depth with three security layers:
 
-- Always restrict the commands that can be executed
-- Limit access to sensitive directories
-- Run with minimal required permissions
-- Consider using containerization for additional security
-- Review the code and permissions before using in production
+1. **Directory Restrictions**: Commands only execute in allowlisted directories
+2. **Command Filtering**: Explicitly control which ShellJS commands are available
+3. **Operation Mode**: Separate read-only from read-write operations with different permission levels
 
-## Development
+Recommended practice: Start with read-only access to non-sensitive directories and gradually expand permissions as needed.
 
-```bash
-# Run in development mode
-npm run dev
+## Why Use MCP-ShellJS?
 
-# Run tests
-npm test
+For AI developers, MCP-ShellJS enables powerful filesystem capabilities with controlled risk:
+
+- **Efficient exploration**: Fast search with `grep` and `find` across codebases
+- **Text processing**: Transform files with `sed` without loading them entirely
+- **Safe automation**: Let AI help with file organization and management
+- **Powerful pipelines**: Chain operations with Unix-style piping
+
+## Resources
+
+### Directory Resource
+
 ```
+directory://{path}?include={glob}&exclude={glob}&honor_gitignore={boolean}
+```
+
+Provides directory listing with powerful filtering capabilities:
+
+| Parameter | Description |
+|-----------|-------------|
+| `include` | Glob pattern(s) to include (e.g., `*.js,*.ts`) |
+| `exclude` | Glob pattern(s) to exclude (e.g., `node_modules,dist`) |
+| `honor_gitignore` | When `true`, filters out files matching patterns in .gitignore |
+| `recursive` | When `true`, includes subdirectories recursively |
+
+**Example:**
+```
+directory:///project/src?include=*.ts&exclude=*.test.ts&honor_gitignore=true
+```
+
+### File Resource
+
+```
+file://{path}?lines={boolean}&start={number}&end={number}
+```
+
+Provides file contents with options for viewing specific portions:
+
+| Parameter | Description |
+|-----------|-------------|
+| `lines` | When `true`, includes line numbers in output |
+| `start` | First line to include (1-based indexing) |
+| `end` | Last line to include |
+| `highlight` | Glob pattern to highlight matching text |
+
+**Example:**
+```
+file:///project/src/index.ts?lines=true&start=10&end=50
+```
+
+## Tools
+
+MCP-ShellJS exposes ShellJS commands as tools, grouped by security risk level:
+
+### Read-Only Tools
+
+| Tool | Description | Arguments |
+|------|-------------|----------|
+| `cat` | Output file contents | `files`: String/Array, `options`: Object with `-n` (number lines) |
+| `grep` | Search files for patterns | `regex`, `files`, `options`: Object with `-v` (invert), `-l` (filenames only), `-i` (ignore case) |
+| `find` | Recursively find files | `paths`: String/Array (returns file paths including base dirs) |
+| `ls` | List directory contents | `paths`: String/Array, `options`: Object with `-R` (recursive), `-A` (all), `-L` (follow symlinks), `-d` (dirs only) |
+| `which` | Locate a command | `command`: String (returns path to command) |
+| `pwd` | Print working directory | (no arguments) |
+| `test` | Test file conditions | `expression`: String (e.g., `-d path` directory exists, `-f path` file exists) |
+| `head` | Show first lines | `files`: String/Array, `options`: Object with `-n <num>` (lines to show) |
+| `tail` | Show last lines | `files`: String/Array, `options`: Object with `-n <num>` (lines to show) |
+| `sort` | Sort lines | `files`: String/Array, `options`: Object with `-r` (reverse), `-n` (numeric) |
+| `uniq` | Filter duplicated lines | `input`: String, `output`: String, `options`: Object with `-i` (ignore case), `-c` (count), `-d` (duplicates only) |
+
+### Read-Write Tools
+
+| Tool | Description | Arguments |
+|------|-------------|----------|
+| `mkdir` | Create directories | `dir`: String/Array, `options`: Object with `-p` (create intermediate dirs) |
+| `touch` | Create/update files | `files`: String/Array, `options`: Object with `-c` (no create), `-a` (access time only), `-m` (mod time only) |
+| `cp` | Copy files/directories | `source`: String/Array, `dest`: String, `options`: Object with `-R` (recursive), `-n` (no clobber), `-f` (force) |
+| `mv` | Move files/directories | `source`: String/Array, `dest`: String, `options`: Object with `-f` (force), `-n` (no clobber) |
+| `rm` | Remove files/directories | `files`: String/Array, `options`: Object with `-r/-R` (recursive), `-f` (force) |
+| `sed` | Stream editor for files | `search_regex`: RegExp, `replacement`: String, `files`: String/Array, `options`: Object with `-i` (in-place) |
+
+### Special Permission Tools
+
+| Tool | Description | Arguments |
+|------|-------------|----------|
+| `exec` | Execute command | `command`: String, `options`: Object with `async`, `silent`, requires `allowExec: true` config |
 
 ## License
 
-[MIT](LICENSE)
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+[GPL-3.0-or-later](LICENSE)
