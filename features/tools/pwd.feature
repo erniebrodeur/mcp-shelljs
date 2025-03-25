@@ -1,4 +1,10 @@
 # Feature: pwd command for displaying current working directory
+#
+# The pwd (print working directory) command displays the absolute path
+# of the current directory where the server is running. It requires no
+# arguments and works in all security modes (read-only, read-write, exec).
+#
+# Example: pwd() -> "/Users/username/Projects/mcp-shelljs"
 
 Feature: pwd command
   As an AI assistant
