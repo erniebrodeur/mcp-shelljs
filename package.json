@@ -13,8 +13,7 @@
     "lint": "eslint . --ext .ts",
     "clean": "rimraf dist",
     "prebuild": "npm run clean",
-    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js",
-    "inspect:dev": "npx @modelcontextprotocol/inspector ts-node src/index.ts"
+    "inspector": "npx @modelcontextprotocol/inspector ts-node src/index.ts"
   },
   "keywords": [
     "mcp",

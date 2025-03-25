@@ -1,20 +1,11 @@
 import { z } from 'zod';
+import { CommonOptionsSchema } from '../common';
 
-/**
- * Parameter schema for pwd command
- * pwd doesn't accept any parameters
- */
-export const pwdInputSchema = z.object({}).strict();
+// pwd has no specific parameters, just common options
+export const PwdOptionsSchema = CommonOptionsSchema;
 
-/**
- * Response schema for pwd command
- * Returns a ShellString containing the current working directory
- */
-export const pwdResponseSchema = z.object({
-  stdout: z.string(), // The current working directory path
-  stderr: z.string().optional(), // Error message if any
-  code: z.number(), // Exit code (0 for success)
+export const PwdParamsSchema = z.object({
+  options: PwdOptionsSchema.optional().default({})
 });
 
-export type PwdInput = z.infer<typeof pwdInputSchema>;
-export type PwdResponse = z.infer<typeof pwdResponseSchema>;
+export type PwdParams = z.infer<typeof PwdParamsSchema>;

@@ -5,27 +5,26 @@ import { SecurityLevel, safeShellCommand, ToolResponse } from "../utils";
 import { SecurityConfig } from "../utils/permissions";
 
 // Import schemas
-import { LsParamsSchema, LsParams } from "../schemas/tool_params/ls";
-import { PwdParamsSchema, PwdParams } from "../schemas/tool_params/pwd";
-import { CatParamsSchema, CatParams } from "../schemas/tool_params/cat";
+import { MkdirParamsSchema, MkdirParams } from "../schemas/tool_params/mkdir";
+import { TouchParamsSchema, TouchParams } from "../schemas/tool_params/touch";
+import { RmParamsSchema, RmParams } from "../schemas/tool_params/rm";
 
-export function registerReadTools(server: McpServer, shellInstance: typeof shell, config: SecurityConfig) {
-  // ls tool
+export function registerWriteTools(server: McpServer, shellInstance: typeof shell, config: SecurityConfig) {
+  // mkdir tool
   server.tool(
-    "ls",
-    LsParamsSchema.shape,
-    async (params: LsParams): Promise<ToolResponse> => {
+    "mkdir",
+    MkdirParamsSchema.shape,
+    async (params: MkdirParams): Promise<ToolResponse> => {
       try {
-        const { paths, options } = params;
-        const pathInput = paths ? (Array.isArray(paths) ? paths : [paths]) : ['.'];
-        const args = [options, ...pathInput];
+        const { dirs, options } = params;
+        const dirsList = Array.isArray(dirs) ? dirs : [dirs];
         
         return await safeShellCommand(
-          shellInstance.ls.bind(shellInstance),
-          args,
-          SecurityLevel.READ,
+          shellInstance.mkdir.bind(shellInstance),
+          [options, ...dirsList],
+          SecurityLevel.WRITE,
           config,
-          "ls"
+          "mkdir"
         );
       } catch (error: any) {
         return {
@@ -36,43 +35,46 @@ export function registerReadTools(server: McpServer, shellInstance: typeof shell
     }
   );
 
-  // pwd tool
+  // touch tool
   server.tool(
-    "pwd",
-    PwdParamsSchema.shape,
-    async (params: PwdParams): Promise<ToolResponse> => {
-      try {
-        return await safeShellCommand(
-          shellInstance.pwd.bind(shellInstance),
-          [params.options],
-          SecurityLevel.READ,
-          config,
-          "pwd"
-        );
-      } catch (error: any) {
-        return {
-          content: [{ type: "text", text: `Error: ${error.message}` }],
-          isError: true
-        };
-      }
-    }
-  );
-
-  // cat tool
-  server.tool(
-    "cat",
-    CatParamsSchema.shape,
-    async (params: CatParams): Promise<ToolResponse> => {
+    "touch",
+    TouchParamsSchema.shape,
+    async (params: TouchParams): Promise<ToolResponse> => {
       try {
         const { files, options } = params;
         const filesList = Array.isArray(files) ? files : [files];
         
         return await safeShellCommand(
-          shellInstance.cat.bind(shellInstance),
+          shellInstance.touch.bind(shellInstance),
           [options, ...filesList],
-          SecurityLevel.READ,
+          SecurityLevel.WRITE,
           config,
-          "cat"
+          "touch"
+        );
+      } catch (error: any) {
+        return {
+          content: [{ type: "text", text: `Error: ${error.message}` }],
+          isError: true
+        };
+      }
+    }
+  );
+
+  // rm tool
+  server.tool(
+    "rm",
+    RmParamsSchema.shape,
+    async (params: RmParams): Promise<ToolResponse> => {
+      try {
+        const { files, options } = params;
+        const filesList = Array.isArray(files) ? files : [files];
+        
+        return await safeShellCommand(
+          shellInstance.rm.bind(shellInstance),
+          [options, ...filesList],
+          SecurityLevel.WRITE,
+          config,
+          "rm"
         );
       } catch (error: any) {
         return {

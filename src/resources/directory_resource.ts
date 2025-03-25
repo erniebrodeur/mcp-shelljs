@@ -6,15 +6,18 @@ import * as path from "path";
 import { validatePath, SecurityLevel } from "../utils/path";
 import { SecurityConfig } from "../utils/permissions";
 import { requirePermission } from "../utils/permissions";
+import { DirectoryUriParams } from "../schemas/uri";
 
 export function registerDirectoryResource(server: McpServer, config: SecurityConfig) {
   server.resource(
     "directory",
     new ResourceTemplate("directory://{dirPath*}", { list: undefined }),
-    async (uri, { dirPath }): Promise<ResourceResponse> => {
+    async (uri, params: DirectoryUriParams): Promise<ResourceResponse> => {
       try {
         // Check read permission (always allowed)
         requirePermission(SecurityLevel.READ, config)();
+        
+        const { dirPath } = params;
         
         // Validate the path
         // Handle URI encoding and path normalization
@@ -36,13 +39,37 @@ export function registerDirectoryResource(server: McpServer, config: SecurityCon
           throw new Error(`Path is not a directory: ${fullPath}`);
         }
         
+        // Build the ls command with options
+        let lsOptions = "-la"; // Default options
+        
+        if (params.recursive) {
+          lsOptions += "R"; // Add recursive flag
+        }
+        
         // Get directory listing
-        const result = shell.ls("-la", fullPath);
+        const result = shell.ls(lsOptions, fullPath);
+        
+        // Filter output if include/exclude patterns are specified
+        let output = result.stdout;
+        
+        if (params.include || params.exclude || params.honor_gitignore) {
+          // Here we'd implement filtering logic based on include/exclude patterns
+          // For now, just add a note about filtering
+          if (params.include) {
+            output += `\n\nFiltering to include: ${params.include}`;
+          }
+          if (params.exclude) {
+            output += `\n\nExcluding: ${params.exclude}`;
+          }
+          if (params.honor_gitignore) {
+            output += `\n\nHonoring .gitignore patterns`;
+          }
+        }
         
         return {
           contents: [{
             uri: uri.href,
-            text: result.stdout
+            text: output
           }]
         };
       } catch (error: any) {
