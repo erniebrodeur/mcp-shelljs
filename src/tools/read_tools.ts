@@ -3,6 +3,7 @@ import { Content } from "@modelcontextprotocol/sdk/types.js";
 import * as shell from "shelljs";
 import { SecurityLevel, safeShellCommand, ToolResponse } from "../utils";
 import { SecurityConfig } from "../utils/permissions";
+import { validatePaths } from "../utils/path";
 
 // Import schemas
 import { LsParamsSchema, LsParams } from "../schemas/tool_params/ls";
@@ -32,6 +33,7 @@ export function registerReadTools(server: McpServer, shellInstance: typeof shell
     sort: "Sort lines. Returns the contents of files sorted line by line.",
     uniq: "Filter duplicate lines. Keep only unique lines from input."
   };
+  
   // ls tool - List directory contents
   // Lists files and directories in the specified location with optional formatting
   server.tool(
@@ -110,19 +112,52 @@ export function registerReadTools(server: McpServer, shellInstance: typeof shell
     }
   );
 
-  // grep tool
+  // grep tool - Search for patterns in files
   server.tool(
     "grep",
-    descriptions.grep,
+    "Search files for patterns. Returns lines matching the specified pattern.",
     GrepParamsSchema.shape,
     async (params: GrepParams): Promise<ToolResponse> => {
       try {
         const { pattern, files, options } = params;
-        const filesList = Array.isArray(files) ? files : [files];
         
+        // Validate input parameters
+        if (!pattern) {
+          throw new Error("Pattern is required");
+        }
+        
+        // Handle file paths
+        const filesList = Array.isArray(files) ? files : [files];
+        if (filesList.length === 0) {
+          throw new Error("At least one file path is required");
+        }
+        
+        // Validate all paths
+        const validatedPaths = validatePaths(filesList, { 
+          requiredLevel: SecurityLevel.READ
+        });
+        
+        // Create flag string from options
+        let flagString = '';
+        if (options) {
+          if (options.v) flagString += 'v';
+          if (options.l) flagString += 'l';
+          if (options.i) flagString += 'i';
+          if (options.n) flagString += 'n';
+        }
+        
+        // If any flags are present, prepend with '-'
+        const grepOptions = flagString ? `-${flagString}` : undefined;
+        
+        // Process arguments based on whether options exist
+        const args = grepOptions 
+          ? [grepOptions, pattern, ...validatedPaths]
+          : [pattern, ...validatedPaths];
+        
+        // Execute grep command with safety checks
         return await safeShellCommand(
           shellInstance.grep.bind(shellInstance),
-          [options, pattern, ...filesList],
+          args,
           SecurityLevel.READ,
           config,
           "grep"
@@ -130,7 +165,11 @@ export function registerReadTools(server: McpServer, shellInstance: typeof shell
       } catch (error: any) {
         return {
           content: [{ type: "text", text: `Error: ${error.message}` }],
-          isError: true
+          isError: true,
+          errorDetail: {
+            code: 1,
+            message: error.message
+          }
         };
       }
     }

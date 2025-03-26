@@ -3,7 +3,7 @@ import { CommonOptionsSchema, PathSchema } from '../common';
 
 // grep command options schema
 export const GrepOptionsSchema = CommonOptionsSchema.extend({
-  v: z.boolean().optional().describe('Invert the match'),
+  v: z.boolean().optional().describe('Invert the match (only print non-matching lines)'),
   l: z.boolean().optional().describe('Print only filenames of matching files'),
   i: z.boolean().optional().describe('Ignore case'),
   n: z.boolean().optional().describe('Print line numbers')
