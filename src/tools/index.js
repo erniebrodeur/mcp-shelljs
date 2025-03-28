@@ -35,19 +35,53 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.setupTools = setupTools;
 const shell = __importStar(require("shelljs"));
-// Import tools
-const read_tools_1 = require("./read_tools");
+const path_1 = require("../utils/path");
+// Import all tool registration functions
+const ls_1 = require("./ls");
+const pwd_1 = require("./pwd");
+const cat_1 = require("./cat");
+const grep_1 = require("./grep");
+const find_1 = require("./find");
+const which_1 = require("./which");
+const test_1 = require("./test");
+const head_1 = require("./head");
+const tail_1 = require("./tail");
+const sort_1 = require("./sort");
+const uniq_1 = require("./uniq");
+// Write tools
+const mkdir_1 = require("./mkdir");
+const touch_1 = require("./touch");
+const rm_1 = require("./rm");
+// Exec tool
+const exec_1 = require("./exec");
+// Map tools to their security levels for registration
+const tools = [
+    // Read tools
+    { register: ls_1.registerLsTool, level: path_1.SecurityLevel.READ },
+    { register: pwd_1.registerPwdTool, level: path_1.SecurityLevel.READ },
+    { register: cat_1.registerCatTool, level: path_1.SecurityLevel.READ },
+    { register: grep_1.registerGrepTool, level: path_1.SecurityLevel.READ },
+    { register: find_1.registerFindTool, level: path_1.SecurityLevel.READ },
+    { register: which_1.registerWhichTool, level: path_1.SecurityLevel.READ },
+    { register: test_1.registerTestTool, level: path_1.SecurityLevel.READ },
+    { register: head_1.registerHeadTool, level: path_1.SecurityLevel.READ },
+    { register: tail_1.registerTailTool, level: path_1.SecurityLevel.READ },
+    { register: sort_1.registerSortTool, level: path_1.SecurityLevel.READ },
+    { register: uniq_1.registerUniqTool, level: path_1.SecurityLevel.READ },
+    // Write tools
+    { register: mkdir_1.registerMkdirTool, level: path_1.SecurityLevel.WRITE },
+    { register: touch_1.registerTouchTool, level: path_1.SecurityLevel.WRITE },
+    { register: rm_1.registerRmTool, level: path_1.SecurityLevel.WRITE },
+    // Exec tool
+    { register: exec_1.registerExecTool, level: path_1.SecurityLevel.EXEC }
+];
 function setupTools(server, config) {
-    // Always register read-only tools
-    (0, read_tools_1.registerReadTools)(server, shell, config);
-    // We'll add these later:
-    // Register write tools if enabled
-    /*if (config.enableRw) {
-      registerWriteTools(server, shell, config);
+    // Register tools based on security level
+    for (const { register, level } of tools) {
+        if (level === path_1.SecurityLevel.READ ||
+            (level === path_1.SecurityLevel.WRITE && config.enableRw) ||
+            (level === path_1.SecurityLevel.EXEC && config.enableRw && config.enableExec)) {
+            register(server, shell, config);
+        }
     }
-    
-    // Register exec tool if enabled
-    if (config.enableExec) {
-      registerExecTool(server, shell, config);
-    }*/
 }

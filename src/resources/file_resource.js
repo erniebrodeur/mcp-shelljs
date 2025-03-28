@@ -39,10 +39,11 @@ const fs = __importStar(require("fs"));
 const path_1 = require("../utils/path");
 const permissions_1 = require("../utils/permissions");
 function registerFileResource(server, config) {
-    server.resource("file", new mcp_js_1.ResourceTemplate("file://{filePath*}", { list: undefined }), async (uri, { filePath }) => {
+    server.resource("file", new mcp_js_1.ResourceTemplate("file://{filePath*}", { list: undefined }), async (uri, params) => {
         try {
             // Check read permission (always allowed)
             (0, permissions_1.requirePermission)(path_1.SecurityLevel.READ, config)();
+            const { filePath } = params;
             // Validate the path
             // Handle URI encoding and path normalization
             const decodedPath = decodeURIComponent(filePath);
@@ -57,7 +58,20 @@ function registerFileResource(server, config) {
                 throw new Error(`Path is a directory, not a file: ${fullPath}`);
             }
             // Read file content
-            const content = fs.readFileSync(fullPath, "utf-8");
+            let content = fs.readFileSync(fullPath, "utf-8");
+            // Handle line number parameters
+            if (params.lines) {
+                content = content.split('\n')
+                    .map((line, idx) => `${idx + 1}: ${line}`)
+                    .join('\n');
+            }
+            // Handle line range parameters
+            if (params.start || params.end) {
+                const lines = content.split('\n');
+                const start = params.start ? params.start - 1 : 0;
+                const end = params.end ? params.end - 1 : lines.length - 1;
+                content = lines.slice(start, end + 1).join('\n');
+            }
             return {
                 contents: [{
                         uri: uri.href,

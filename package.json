@@ -36,11 +36,11 @@
   },
   "devDependencies": {
     "@cucumber/cucumber": "^9.5.1",
-    "@types/cucumber": "^7.0.0",
     "@types/node": "^22.13.11",
-    "expect": "^29.7.0",
     "@types/shelljs": "^0.8.15",
+    "cucumber": "^6.0.7",
     "eslint": "^8.53.0",
+    "expect": "^29.7.0",
     "rimraf": "^5.0.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2"
